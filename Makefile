@@ -1,6 +1,6 @@
 default: copy
 
-VERSION=1.0.0a
+VERSION=1.0.1a
 
 COPY_PATH=$$HOME/.local/share/atlauncher/instances/Minecraft1211withFabric/shaderpacks/
 
