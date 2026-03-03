@@ -11,7 +11,7 @@
 		float d = length(viewPos) / far;
 		#define strongerNightFog
 		#ifdef strongerNightFog
-			float f = exp((-fogDensity + (pow(world.moon, 4.0) + wetness * 1.5) * canSeeTheSky) * (fogDistance - d));
+			float f = exp((-fogDensity + (pow(world.moon, 4.0) + wetness * 1.1) * canSeeTheSky) * (fogDistance - d));
 		#else
 			float f = exp((-fogDensity + wetness * 3.0 * canSeeTheSky) * (fogDistance - d));
 		#endif
