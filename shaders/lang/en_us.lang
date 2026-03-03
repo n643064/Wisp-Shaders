@@ -1,0 +1,5 @@
+screen.GENERAL = General
+screen.LIGHTING = Lighting
+screen.SKY = Sky
+screen.WATER = Water
+screen.FOG = Fog
