@@ -15,9 +15,11 @@
         return w / x2;
     }
 
-    vec3 getSkyColor(vec3 viewPosNormalized, vec3 playerPosNormalized, WorldData world)
+    vec3 getSkyColor(vec3 playerPosNormalized, WorldData world)
     {
-        float f = dot(viewPosNormalized, gbufferModelView[1].xyz);
+        vec3 gb = mat3(gbufferModelViewInverse) * gbufferModelView[1].xyz;
+
+        float f = dot(playerPosNormalized, gb);
         float upDot = bell(clamp(f, 0.0, 1.0), skyColorTransitionWidth);
         vec3 color = mix(world.skyColor, world.fogColor, upDot);
 

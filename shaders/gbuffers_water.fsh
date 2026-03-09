@@ -38,15 +38,15 @@ layout(location = 3) out vec4 waterData;
 #define depthBasedWaterFoamStrength 1.2 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.7 2.8 2.9 3.0 3.1 3.2 3.3 3.4 3.5 3.6 3.7 3.8 3.9 4.0]
 #define waterFoamBorder 0.5 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
 
-
 const vec3 waterColor = vec3(0.35, 0.47, 0.7) * 0.8;
+uniform float frameTimeCounter;
 
-#define waterFoam
+uniform sampler2D noisetex0;
+
+// #define waterFoam
 #ifdef waterFoam
 	uniform sampler2D depthtex1;
 	uniform float viewWidth, viewHeight;
-	uniform float frameTimeCounter;
-	uniform sampler2D noisetex0;
 
 	float getOpaqueDepth()
 	{
@@ -65,10 +65,67 @@ vec2 warp(vec2 p)
 	return p + v;
 }
 
+#define coord2float(a, d, f) (a.x * d.x * f + a.y * d.y * f)
+#define waveDx(a, d, t, A, s, f) (d * cos(coord2float((a), d, f) + t * s) * A).xy
+#define normalFromDx(dx, o) (normalize(o - vec3(dx.xy, 0.0)))
+// TODO: improve this
+
+#define waterNormals
+#ifdef waterNormals
+	vec3 getAdditionalNormals(vec3 v, float t, vec3 o)
+	{
+		vec3 n = vec3(0);
+		vec2 w = vec2(0);
+		w = waveDx(v.xz + w, vec2(0.485, -0.665), t, 2.4 , 1 , 1 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.763, -0.439), t, 1.968 , 1.1 , 1.18 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.884, 0.352), t, 1.61376 , 1.21 , 1.3924 );
+		n += normalFromDx(w, o);
+// 		w = waveDx(v.xz + w, vec2(-0.9, 0.544), t, 1.32328 , 1.331 , 1.64303 );
+// 		n += normalFromDx(w, o);
+// 		w = waveDx(v.xz + w, vec2(0.331, 0.126), t, 1.08509 , 1.4641 , 1.93878 );
+// 		n += normalFromDx(w, o);
+// 		w = waveDx(v.xz + w, vec2(-0.02, 0.238), t, 0.88977 , 1.61051 , 2.28776 );
+// 		n += normalFromDx(w, o);
+// 		w = waveDx(v.xz + w, vec2(-0.542, 0.545), t, 0.72961 , 1.77156 , 2.69956 );
+// 		n += normalFromDx(w, o);
+
+		w = waveDx(v.xz + w, vec2(-0.905, -0.706), t, 0.59828 , 1.94872 , 3.18548 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.731, 0.485), t, 0.49059 , 2.14359 , 3.75887 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.878, 0.766), t, 0.40228 , 2.35795 , 4.43547 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.923, -0.488), t, 0.32987 , 2.59375 , 5.23385 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(0.328, 0.385), t, 0.27049 , 2.85313 , 6.17594 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(0.881, -0.654), t, 0.2218 , 3.13844 , 7.28761 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(-0.513, 0.504), t, 0.18188 , 3.45228 , 8.59938 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(0.597, -0.807), t, 0.14914 , 3.79751 , 10.14727 );
+		n += normalFromDx(w, o);
+		w = waveDx(v.xz + w, vec2(0.711, -0.439), t, 0.12229 , 4.17726 , 11.97378 );
+		n += normalFromDx(w, o);
+		return n;
+	}
+#endif
+#define reflectSky
+#ifdef reflectSky
+	#include "/lib/sky.glsl"
+	#include "/lib/clouds.glsl"
+#endif
+
+
 void main()
 {
 	outNormal = vec4(worldNormal * 0.5 + 0.5, 1.0);
 	vec3 normal = worldNormal;
+	lightmap = vec4(lmcoord, 0.0, 1.0);
+	WorldData world = getWorldData();
+
 	if (blockId == 1)
 	{
 		waterData = vec4(1.0, 0.0, 0.0, 1.0);
@@ -78,6 +135,11 @@ void main()
 			color = vec4(glcolor.rgb, waterAlpha);
 		#else
 			color = vec4(waterColor, waterAlpha);
+		#endif
+
+		#define waterSaturatedBasedOnSkylight
+		#ifdef waterSaturatedBasedOnSkylight
+			color.rgba *= vec4(lightmap.g, lightmap.g, lightmap.g, 2.0-lightmap.g);
 		#endif
 
 // 		#define waterTexture
@@ -115,7 +177,23 @@ void main()
 				#endif
 			#endif
 		#endif
+		#ifdef waterNormals
+			normal = normalize(normal + getAdditionalNormals(worldPos, frameTimeCounter, normal));
+		#endif
+		#ifdef reflectSky
+			if (lightmap.g > 0.2)
+			{
+				vec3 playerReflected = reflect(normalize(playerPos), normal);
+				vec3 c = getSkyColor(normalize(playerReflected), world);
+				float cd = (bedrockLevel + heightLimit) - camPos.y + cloudHeightOffset;
 
+				color.rgb = mix(color.rgb, c, 0.2);
+				#define customClouds
+				#ifdef customClouds
+					applyClouds(color.rgb, playerReflected, cd, world);
+				#endif
+			}
+		#endif
 	} else
 	{
 		color = glcolor * texture(gtexture, texcoord);
@@ -130,10 +208,9 @@ void main()
 
 	color.rgb = pow(color.rgb, vec3(2.2));
 
-	WorldData world = getWorldData();
 
-	lightmap = vec4(lmcoord, 0.0, 1.0);
+
 	vec3 lightColor = getLightColor(normal, normalize(camPos - worldPos), lightmap.rg, world);
-
+	outNormal = vec4(normal, 1.0);
 	color.rgb *= lightColor;
 }

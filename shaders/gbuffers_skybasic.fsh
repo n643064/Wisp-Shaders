@@ -34,6 +34,6 @@ void main()
 		vec3 view = viewFromScreen(vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), 1.0));
 		vec3 player = mat3(gbufferModelViewInverse) * view;
 
-		color = vec4(getSkyColor(normalize(view), normalize(player), world), 1.0);
+		color = vec4(getSkyColor(normalize(player), world), 1.0);
 	}
 }
