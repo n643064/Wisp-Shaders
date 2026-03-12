@@ -16,7 +16,7 @@
 	const vec3 cloudColorRain = vec3(0.5);
 	#define clouds(p, r, t) (blur(noisetex0, (p) / r + frameTimeCounter / t, vec2(r)).xyz)
 
-	void applyClouds(inout vec3 color, vec3 playerNormalized, float cd, WorldData world)
+	void applyClouds(inout vec3 color, vec3 playerNormalized, float cd, WorldData world, float mult)
 	{
 		vec3 p = vec3(playerNormalized.xz * (cd / playerNormalized.y), cd).xzy;
 		float m = 1.9 - wetness * 0.25;
@@ -31,7 +31,7 @@
 		float d = sqrt(p.x*p.x + p.z*p.z);
 		f = mix(f, 0.0, clamp(d / cloudDistance, 0.0, 1.0));
 		c = mix(cloudColorNight, c, world.sun);
-		color = mix(color.rgb, c * cloudStrength, clamp(f, 0.0, 1.0));
+		color = mix(color.rgb, c * cloudStrength, clamp(f * mult, 0.0, 1.0));
 	}
 
 #endif

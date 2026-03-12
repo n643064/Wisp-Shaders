@@ -56,7 +56,7 @@ void main()
 			float cd = (bedrockLevel + heightLimit) - realCamera.y + cloudHeightOffset;
 			if (sign(playerNormalized.y) == sign(cd))
 			{
-				applyClouds(color.rgb, playerNormalized, cd, world);
+				applyClouds(color.rgb, playerNormalized, cd, world, 1.0);
 			}
 		}
 	#endif
