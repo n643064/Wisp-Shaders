@@ -93,7 +93,8 @@ void main()
 
 		#define waterSaturatedBasedOnSkylight
 		#ifdef waterSaturatedBasedOnSkylight
-			color.rgba *= vec4(lightmap.g, lightmap.g, lightmap.g, 1.0-lightmap.g);
+			color.rgba *= vec4(lightmap.g, lightmap.g, lightmap.g, 2.0-lightmap.g);
+			color.a = clamp(color.a, 0.0, 0.9);
 		#endif
 
 // 		#define waterTexture
